@@ -1,133 +1,173 @@
-/* lista 5
- 1 Liste todos os empregados que possuem um salário que é maior ou
-igual a média salarial de todos os empregados que possuem salário
-maior que R$ 5000,00. Mostrar nome do departamento, o número do
-funcionário, sobrenome e salário. Ordenar a lista pelo número do
-departamento e pelo número do funcionário.*/
-
-select 
-departamento.nome as departamento,
-empregado.id_empregado as numero_empregado,
-empregado.sobrenome,
-empregado.salario
-from departamento join empregado using (id_departamento)
-	where 
-	 (empregado.salario >= (select avg(empregado.salario) from empregado)) and empregado.salario >5000
-order by empregado.sobrenome;
------------------------------------
-
-/* lista 5
-2 Listar o número do funcionário e o sobrenome de todos os
-funcionários não atribuídos a nenhum projeto. Isto significa que a
-tabela “Empregado_projeto” não contém nenhuma uma linha com o
-identificador do funcionário.*/
-
-select 
-empregado.id_empregado as 'numero-funcionario',
-empregado.sobrenome
-from empregado
-where id_empregado not in (select id_empregado from empregado_projeto where id_empregado is not null)
-
-----------------------------------------
-/* lista 5
-3 Liste o número, nome e duração (em dias) do projeto com o menor
-tempo de duração.*/
-
-select projeto.id_projeto,
-projeto.descricao ,
-datediff(data_fim,data_inicio) as duração
-
-from projeto 
-
-where datediff(data_fim,data_inicio) <= (select min(datediff(data_fim,data_inicio)) from projeto)
-------------------------------------------
-
-/* lista 5
-4 Liste o número do departamento, nome do departamento, nome e
-sobrenome dos empregados de todos os departamentos que só
-possuem funcionários do sexo feminino.*/
-
-
-select departamento.id_departamento, nome,
-empregado.primeiro_nome, sobrenome
-from departamento join empregado using(id_departamento)
-where 
-departamento.id_departamento in 
-(select departamento.id_departamento 
-from departamento join empregado using(id_departamento) 
-where empregado.sexo ='F' and empregado.sexo is not null)
-and departamento.id_departamento  not in
-(select departamento.id_departamento 
-from departamento join empregado using(id_departamento) 
-where empregado.sexo ='M'and empregado.sexo is not null)
-------------------------------------------------------
-/* lista 5
-5 Liste o número do departamento, nome do departamento e a
-quantidade de funcionários de todos os departamentos que só
-possuem mulheres. O salário médio destas funcionárias devem ser
-superiores a 500 reais.*/
-
-
-select departamento.id_departamento, nome,
-count(*) as 'qtd funcionarios'
-from departamento join empregado using(id_departamento)
-
-where empregado.id_departamento in 
-	(select empregado.id_departamento 
-	from empregado join departamento using (id_departamento) 
-	where empregado.sexo = 'F' 
-	group by departamento.id_departamento having avg(salario) > 500) 
-------------------------------------------------------
-
-/* lista 5
-6. Liste os departamentos (id_departamento, nome e quantidade de
-projetos) que possuem um ou mais projetos iniciados no ano de 2015,
-além de possuir média salarial de seus empregados acima de 500
-reais.*/
-
-
-select departamento.id_departamento, nome,
-count(*) as 'qtd projetos'
-from departamento join empregado using(id_departamento)
-join projeto using (id_departamento)
-where year(projeto.data_inicio) >= '2015' and 
-departamento.id_departamento in 
-	(select empregado.id_departamento from empregado 
-	group by empregado.salario having avg(empregado.salario) >500)
-
-group by projeto.id_departamento;
-
-----------------------------------------------
-/* lista 5
-7. Liste a quantidade de projetos de cada departamento que possuem o
+/*7. Liste a quantidade de projetos de cada departamento que possuem o
 tempo de duração superior a média dos tempos de duração de todos
 os projetos (de todos os departamentos). Mostre o número e o nome
 dos departamentos, bem como a quantidade de projetos que
-atendem os requisitos.*/
+atendem os requisitos.
+
+select
+id_departamento,
+nome,
+count(*) as 'numero de projetos'
+from 
+	departamento d 	join projeto p using(id_departamento)
+where 
+id_projeto in 
+(	select 
+		id_projeto
+	from 
+		projeto
+	group by 
+		id_projeto
+	having 
+		avg(datediff(data_fim,data_inicio))>
+
+	(select 
+		avg(datediff(data_fim,data_inicio)) 
+	from 
+		projeto)
+)
+
+group by id_departamento;*/
+
+/*6. Liste os departamentos (id_departamento, nome e quantidade de
+projetos) que possuem um ou mais projetos iniciados no ano de 2015,
+além de possuir média salarial de seus empregados acima de 500
+reais.
 
 select 
-	id_departamento,
-	nome,
-	count(*) as 'qtd_projetos'
+id_departamento,
+nome,
+count(*) as 'numero de projetos'
+from 
+	departamento d join projeto p using (id_departamento)
+	join empregado using (id_departamento)
+where 
+	year(data_inicio)=2015
+group by 
+	id_departamento 
+having 
+	(select avg(salario)from empregado) >500
+*/
 
-from departamento d join empregado e using (id_departamento)
-join projeto using(id_departamento)
+
+/*5. Liste o número do departamento, nome do departamento e a
+quantidade de funcionários de todos os departamentos que só
+possuem mulheres. O salário médio destas funcionárias devem ser
+superiores a 500 reais.
+
+
+select 
+	e.id_departamento,
+	d.nome,
+	count(*) as 'numero funcionarias' 
+from 
+	departamento d join empregado e using(id_departamento)
+where 
+	id_departamento in 
+	(select 
+		id_departamento 
+	from 
+		 empregado 
+	where sexo = 'F' and sexo is not null
+	group by 
+		sexo
+	having
+		avg(salario)>500)
+	and 
+	id_departamento not in 
+	
+	(select 
+		id_departamento 
+	from 
+		 empregado 
+	where sexo = 'M' and sexo is not null) */
+
+
+/*4. Liste o número do departamento, nome do departamento, nome e
+sobrenome dos empregados de todos os departamentos que só
+possuem funcionários do sexo feminino. 
+
+select 
+id_departamento,
+primeiro_nome,
+sobrenome 
+from 
+departamento d join empregado e using(id_departamento)
 
 where 
 id_departamento in 
-	
-	((select id_departamento 
-	 from projeto
-	 group by id_projeto
-	 having 
-	 avg(datediff(data_fim,data_inicio)) <
-		 (select 
-		 avg(datediff(data_fim,data_inicio))
-		 from 
-		 projeto)))
 
-group by
-	id_departamento;
+	(select 
+		id_departamento 
+	from 
+		departamento d join empregado e using(id_departamento) where sexo = 'F' and sexo is not null) 
+		
+	and id_departamento not in
+	
+	(select 
+		id_departamento 
+	from 
+		departamento d join empregado e using(id_departamento) where sexo = 'M' and sexo is not null)
+
+*/
+
+
+/*3. Liste o número, nome e duração (em dias) do projeto com o menor
+tempo de duração. 
+
+
+select 
+	descricao,
+	id_projeto,
+	datediff(data_fim,data_inicio) 
+from 
+	projeto p 
+where 
+	datediff(data_fim,data_inicio) <=
+	(select 
+		min(datediff(data_fim,data_inicio))
+	from 
+		projeto)
+*/
+
+
+/*2. Listar o número do funcionário e o sobrenome de todos os
+funcionários não atribuídos a nenhum projeto. Isto significa que a
+tabela “EmpregadoPprojeto” não contém nenhuma uma linha com o
+identificador do funcionário.
+select 
+	e.id_empregado, 
+	e.sobrenome 
+from 
+	empregado e 
+where 
+	id_empregado not in 
+	(select(id_empregado)
+	 from empregado_projeto
+	 where id_empregado is not null)
+
+*/
+
+
+/*1 Liste todos os empregados que possuem um salário que é maior ou
+igual a média salarial de todos os empregados que possuem salário
+maior que R$ 5000,00. Mostrar nome do departamento, o número do
+funcionário, sobrenome e salário. Ordenar a lista pelo número do
+departamento e pelo número do funcionário.
+
+select 
+	d.nome,
+	e.id_empregado,
+	sobrenome,
+	salario
+from
+	empregado e join departamento d using (id_departamento)
+where 
+	e.salario >= (select avg(salario)from empregado)
+	and e.salario > 5000
+	
+order by
+	id_departamento;*/
 
 ------------------------------------
 
