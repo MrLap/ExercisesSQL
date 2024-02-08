@@ -4,6 +4,7 @@ os projetos (de todos os departamentos). Mostre o número e o nome
 dos departamentos, bem como a quantidade de projetos que
 atendem os requisitos.
 
+
 select
 id_departamento,
 nome,
